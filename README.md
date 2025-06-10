@@ -21,6 +21,7 @@ Questo plugin permette di controllare il tuo sistema di antifurto Elmo tramite l
 - Homebridge v1.3.0 o superiore
 - Node.js v14 o superiore
 - Python 3.6 o superiore
+- python3-venv
 - Un sistema di antifurto Elmo con accesso alle API cloud
 
 ## Installazione
@@ -82,11 +83,11 @@ Il plugin esegue un polling periodico per aggiornare lo stato del sistema e reag
 
 Se riscontri problemi con il plugin, prova a:
 
-1. Abilitare la modalità debug impostando `debug: true` nella configurazione
-2. Verificare i log di Homebridge per eventuali errori
-3. Assicurarsi che le credenziali siano corrette
-4. Verificare che il sistema Elmo sia raggiungibile e funzionante
-
+1. Assicurarsi che `python3-venv` sia installato
+2. Abilitare la modalità debug impostando `debug: true` nella configurazione
+3. Verificare i log di Homebridge per eventuali errori
+4. Assicurarsi che le credenziali siano corrette
+5. Verificare che il sistema Elmo sia raggiungibile e funzionante
 
 ## Crediti
 
