@@ -5,7 +5,7 @@ import sys
 
 def install_package(package):
     try:
-        subprocess.check_call([sys.executable, "-m", "pip", "install", package, "--break-system-packages"])
+        subprocess.check_call([sys.executable, "-m", "pip", "install", package])
         print(f"Installato {package}")
         return True
     except subprocess.CalledProcessError:
@@ -13,7 +13,7 @@ def install_package(package):
         return False
 
 if __name__ == "__main__":
-    packages = ["requests", "econnect-python", "elmo"]
+    packages = ["requests", "econnect-python"]
     success = True
     
     for package in packages:

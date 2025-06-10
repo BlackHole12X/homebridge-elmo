@@ -16,6 +16,15 @@ class ElmoPlatform {
     this.config = config;
     this.api = api;
 
+    // Percorso della venv
+    this.venvPath = path.join(__dirname, '.venv');
+    this.pythonPath = process.platform === 'win32'
+      ? path.join(this.venvPath, 'Scripts', 'python.exe')
+      : path.join(this.venvPath, 'bin', 'python3');
+
+    // Crea la venv se necessario
+    this.ensureVenv();
+
     // Installa le dipendenze Python se necessario
     this.ensurePythonDependencies();
     
@@ -88,10 +97,11 @@ class ElmoPlatform {
    */
   pollElmoStatus() {
     this.log.debug('Polling dello stato del sistema Elmo');
-    
+
     const pythonScript = path.join(__dirname, 'scripts', 'elmo_client.py');
     const options = {
       mode: 'json',
+      pythonPath: this.pythonPath, // Usa il python del venv
       args: [
         'status',
         this.username,
@@ -100,11 +110,11 @@ class ElmoPlatform {
         this.domain
       ]
     };
-    
+
     if (this.debug) {
       options.args.push('--debug');
     }
-    
+
     PythonShell.run(pythonScript, options, (err, results) => {
       if (err) {
         this.log.error('Errore durante il polling dello stato:', err);
@@ -378,7 +388,7 @@ class ElmoPlatform {
    */
   async setTargetState(state) {
     this.log.info('setTargetState:', this.getStateDescription(state));
-    
+
     return new Promise((resolve, reject) => {
       // Aggiorna lo stato target
       this.targetState = state;
@@ -425,6 +435,7 @@ class ElmoPlatform {
       
       const options = {
         mode: 'json',
+        pythonPath: this.pythonPath, // Usa il python del venv
         args: [
           command,
           this.username,
@@ -510,13 +521,32 @@ class ElmoPlatform {
   }
   
   /**
-   * Verifica e installa le dipendenze Python richieste
+   * Crea un venv Python se non esiste
+   */
+  ensureVenv() {
+    if (!fs.existsSync(this.venvPath)) {
+      this.log.info('Creazione di un ambiente virtuale Python per il plugin...');
+      const result = spawnSync('python3', ['-m', 'venv', this.venvPath], { encoding: 'utf-8' });
+      if (result.error) {
+        this.log.error('Errore durante la creazione del venv:', result.error.message);
+      } else if (result.status !== 0) {
+        this.log.error('Creazione del venv fallita:\n', result.stdout, result.stderr);
+      } else {
+        this.log.info('Ambiente virtuale Python creato con successo.');
+      }
+    } else {
+      this.log.debug('Ambiente virtuale Python già presente.');
+    }
+  }
+
+  /**
+   * Verifica e installa le dipendenze Python richieste nel venv
    */
   ensurePythonDependencies() {
     const scriptPath = path.join(__dirname, 'scripts', 'install_dependencies.py');
-    this.log.info('Verifica delle dipendenze Python...');
+    this.log.info('Verifica delle dipendenze Python nel venv...');
     try {
-      const result = spawnSync('python3', [scriptPath], { encoding: 'utf-8' });
+      const result = spawnSync(this.pythonPath, [scriptPath], { encoding: 'utf-8' });
       if (result.error) {
         this.log.error('Errore durante il controllo delle dipendenze Python:', result.error.message);
       } else if (result.status !== 0) {
