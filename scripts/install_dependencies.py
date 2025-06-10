@@ -13,7 +13,7 @@ def install_package(package):
         return False
 
 if __name__ == "__main__":
-    packages = ["requests", "econnect-python"]
+    packages = ["requests", "econnect-python", "elmo"]
     success = True
     
     for package in packages:
