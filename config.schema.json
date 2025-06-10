@@ -1,0 +1,90 @@
+{
+  "pluginAlias": "ElmoSecuritySystem",
+  "pluginType": "platform",
+  "singular": true,
+  "schema": {
+    "type": "object",
+    "properties": {
+      "name": {
+        "title": "Nome",
+        "type": "string",
+        "required": true,
+        "default": "Elmo Security System"
+      },
+      "username": {
+        "title": "Username",
+        "type": "string",
+        "required": true,
+        "description": "Username per accedere al sistema Elmo"
+      },
+      "password": {
+        "title": "Password",
+        "type": "string",
+        "required": true,
+        "description": "Password per accedere al sistema Elmo"
+      },
+      "code": {
+        "title": "Codice",
+        "type": "string",
+        "required": true,
+        "description": "Codice numerico per armare/disarmare il sistema"
+      },
+      "system": {
+        "title": "Sistema",
+        "type": "string",
+        "required": true,
+        "default": "e-connect",
+        "oneOf": [
+          { "title": "Elmo e-Connect", "enum": ["e-connect"] },
+          { "title": "IESS Metronet", "enum": ["metronet"] }
+        ],
+        "description": "Tipo di sistema Elmo"
+      },
+      "domain": {
+        "title": "Dominio",
+        "type": "string",
+        "required": false,
+        "default": "default",
+        "description": "Dominio utilizzato per accedere alla pagina di login via web. Se accedi a https://connect.elmospa.com/vendor/, devi impostare il dominio su 'vendor'. Se non hai un dominio definito, lascialo su 'default'."
+      },
+      "pollInterval": {
+        "title": "Intervallo di polling (secondi)",
+        "type": "integer",
+        "required": false,
+        "default": 30,
+        "minimum": 10,
+        "maximum": 300,
+        "description": "Intervallo in secondi tra le richieste di aggiornamento dello stato"
+      },
+      "debug": {
+        "title": "Debug",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "description": "Abilita i log di debug"
+      },
+      "homeSectors": {
+        "title": "Settori modalità Casa",
+        "type": "string",
+        "required": false,
+        "default": "",
+        "description": "Elenco dei settori da armare in modalità Casa (separati da virgola, es: 1,3). Lascia vuoto per armare tutti i settori."
+      },
+      "awaySectors": {
+        "title": "Settori modalità Via",
+        "type": "string",
+        "required": false,
+        "default": "",
+        "description": "Elenco dei settori da armare in modalità Via (separati da virgola, es: 1,2,3). Lascia vuoto per armare tutti i settori."
+      },
+      "nightSectors": {
+        "title": "Settori modalità Notte",
+        "type": "string",
+        "required": false,
+        "default": "",
+        "description": "Elenco dei settori da armare in modalità Notte (separati da virgola, es: 2,3). Lascia vuoto per armare tutti i settori."
+      }
+    }
+  }
+}
+

@@ -1,0 +1,53 @@
+{
+  "name": "homebridge-elmo",
+  "version": "0.1.0",
+  "description": "Homebridge plugin per integrare i sistemi di antifurto Elmo con HomeKit",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "prepublishOnly": "npm prune",
+    "postpublish": "npm tag homebridge-elmo@0.1.0 latest",
+    "lint": "echo \"No linting configured\""
+  },
+  "keywords": [
+    "homebridge-plugin",
+    "homekit",
+    "elmo",
+    "alarm",
+    "security",
+    "antifurto"
+  ],
+  "engines": {
+    "node": ">=14.0.0",
+    "homebridge": ">=1.3.0"
+  },
+  "author": "BlackHole12X",
+  "license": "MIT",
+  "dependencies": {
+    "python-shell": "^3.0.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/BlackHole12X/homebridge-elmo.git"
+  },
+  "bugs": {
+    "url": "https://github.com/BlackHole12X/homebridge-elmo/issues"
+  },
+  "homepage": "https://github.com/BlackHole12X/homebridge-elmo#readme",
+  "funding": {
+    "type": "paypal",
+    "url": "https://paypal.me/TheBlackHole"
+  },
+  "files": [
+    "LICENSE",
+    "README.md",
+    "INSTALL.md",
+    "TESTING.md",
+    "TROUBLESHOOTING.md",
+    "SUMMARY.md",
+    "config.schema.json",
+    "index.js",
+    "scripts"
+  ],
+  "devDependencies": {}
+}
