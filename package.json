@@ -1,6 +1,6 @@
 {
   "name": "homebridge-elmo",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "Homebridge plugin per integrare i sistemi di antifurto Elmo con HomeKit",
   "main": "index.js",
   "scripts": {
