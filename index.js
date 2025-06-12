@@ -184,7 +184,7 @@ class ElmoPlatform {
     this.log.debug('Settori normalizzati:', JSON.stringify(sectorsArray));
     
     // Determina lo stato del sistema in base ai settori configurati
-    const armedSectors = sectorsArray.filter(sector => sector && sector.armed).map(s => s.id);
+    const armedSectors = sectorsArray.filter(sector => sector && sector.status).map(s => s.element);
     this.log.debug('Settori armati:', armedSectors);
     
     let newState = 3; // Disarmato per default
