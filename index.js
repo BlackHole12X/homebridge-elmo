@@ -175,7 +175,13 @@ class ElmoPlatform {
       sectorsArray = status.sectors;
     } else if (typeof status.sectors === 'object' && status.sectors !== null) {
       // Converti oggetto in array
+<<<<<<< HEAD
       sectorsArray = Object.values(status.sectors);
+=======
+      sectorsArray = Object.values(status.sectors.sectors);
+      this.log.debug(sectorsArray);
+      this.log.debug(status.sectors.sectors);
+>>>>>>> 309ac3b (Aggiornamento alla versione 1.0.0)
     } else {
       this.log.error('Formato settori non riconosciuto');
       return;
@@ -184,6 +190,7 @@ class ElmoPlatform {
     this.log.debug('Settori normalizzati:', JSON.stringify(sectorsArray));
     
     // Determina lo stato del sistema in base ai settori configurati
+<<<<<<< HEAD
     const armedSectors = sectorsArray.filter(sector => sector && sector.status).map(s => s.element);
     this.log.debug('Settori armati:', armedSectors);
     
@@ -192,6 +199,27 @@ class ElmoPlatform {
     if (armedSectors.length > 0) {
       // Controlla se corrisponde a una modalità specifica
       if (this.sectorsMatch(armedSectors, this.homeSectors)) {
+=======
+    const armedSectors = sectorsArray.filter(sector => sector && sector.status).map(sector => sector.element);
+    this.lastArmedSectors = armedSectors; // <--- aggiungi questa riga
+    this.log.debug('Settori armati:', armedSectors);
+    
+    let newState = 3; // Disarmato per default
+
+    if (armedSectors.length > 0) {
+      // Se l'utente ha richiesto una modalità e i settori armati corrispondono, usa quella
+      if (
+        typeof this.lastRequestedState === 'number' &&
+        (
+          (this.lastRequestedState === 0 && this.sectorsMatch(armedSectors, this.homeSectors)) ||
+          (this.lastRequestedState === 1 && this.sectorsMatch(armedSectors, this.awaySectors)) ||
+          (this.lastRequestedState === 2 && this.sectorsMatch(armedSectors, this.nightSectors))
+        )
+      ) {
+        newState = this.lastRequestedState;
+        this.log.debug('Modalità rilevata in base all\'ultima richiesta utente:', this.getStateDescription(newState));
+      } else if (this.sectorsMatch(armedSectors, this.homeSectors)) {
+>>>>>>> 309ac3b (Aggiornamento alla versione 1.0.0)
         newState = 0; // Casa
         this.log.debug('Rilevata modalità Casa');
       } else if (this.sectorsMatch(armedSectors, this.nightSectors)) {
@@ -388,18 +416,27 @@ class ElmoPlatform {
    */
   async setTargetState(state) {
     this.log.info('setTargetState:', this.getStateDescription(state));
+<<<<<<< HEAD
 
     return new Promise((resolve, reject) => {
       // Aggiorna lo stato target
       this.targetState = state;
       
       // Evita operazioni concorrenti
+=======
+    this.lastRequestedState = state;
+
+    return new Promise((resolve, reject) => {
+      this.targetState = state;
+
+>>>>>>> 309ac3b (Aggiornamento alla versione 1.0.0)
       if (this.operationInProgress) {
         const error = new Error('Operazione già in corso, attendere il completamento');
         this.log.warn(error.message);
         reject(error);
         return;
       }
+<<<<<<< HEAD
       
       this.operationInProgress = true;
       
@@ -436,6 +473,129 @@ class ElmoPlatform {
       const options = {
         mode: 'json',
         pythonPath: this.pythonPath, // Usa il python del venv
+=======
+
+      this.operationInProgress = true;
+
+      const pythonScript = path.join(__dirname, 'scripts', 'elmo_client.py');
+      let command;
+      let sectors = null;
+
+      // Determina i settori richiesti per la modalità
+      let requestedSectors = null;
+      if (state === 0) requestedSectors = this.homeSectors;
+      if (state === 1) requestedSectors = this.awaySectors;
+      if (state === 2) requestedSectors = this.nightSectors;
+
+      // Se non ci sono settori configurati per questa modalità, esci senza fare nulla
+      if ((state === 0 || state === 1 || state === 2) && (!Array.isArray(requestedSectors) || requestedSectors.length === 0)) {
+        this.log.warn(`Nessun settore configurato per la modalità ${this.getStateDescription(state)}. Nessuna azione eseguita.`);
+        this.currentState = state;
+        this.updateAccessoryState();
+        this.operationInProgress = false;
+        resolve();
+        return;
+      }
+
+      // Se disarmo, mando il comando disarm su tutti i settori armati
+      if (state === 3) {
+        command = 'disarm';
+        sectors = this.lastArmedSectors && this.lastArmedSectors.length > 0 ? this.lastArmedSectors : null;
+      } else {
+        // Seleziona i settori da armare e da disarmare
+        const alreadyArmed = Array.isArray(this.lastArmedSectors) ? this.lastArmedSectors : [];
+        const toArm = requestedSectors.filter(s => !alreadyArmed.includes(s));
+        const toDisarm = alreadyArmed.filter(s => !requestedSectors.includes(s));
+
+        if (toDisarm.length > 0) {
+          // Prima disarma i settori non richiesti
+          this.log.info(`Disarmo settori non richiesti dalla modalità: ${toDisarm.join(',')}`);
+          const disarmOptions = {
+            mode: 'json',
+            pythonPath: this.pythonPath,
+            args: [
+              'disarm',
+              this.username,
+              this.password,
+              this.system,
+              this.domain,
+              this.code,
+              toDisarm.join(',')
+            ],
+            timeout: 30000
+          };
+          PythonShell.run(pythonScript, disarmOptions, (err, results) => {
+            if (err || !results || !results[0].success) {
+              this.operationInProgress = false;
+              this.log.error('Errore durante il disarmo dei settori:', err || (results && results[0].message));
+              this.targetState = this.currentState;
+              this.updateAccessoryState();
+              reject(new Error('Errore durante il disarmo dei settori'));
+              return;
+            }
+            this.log.info('Settori disarmati con successo:', toDisarm.join(','));
+            // Dopo il disarmo, procedi con l'armamento se necessario
+            if (toArm.length > 0) {
+              this.log.info(`Armo i settori richiesti: ${toArm.join(',')}`);
+              const armOptions = {
+                mode: 'json',
+                pythonPath: this.pythonPath,
+                args: [
+                  'arm',
+                  this.username,
+                  this.password,
+                  this.system,
+                  this.domain,
+                  this.code,
+                  toArm.join(',')
+                ],
+                timeout: 30000
+              };
+              PythonShell.run(pythonScript, armOptions, (err2, results2) => {
+                this.operationInProgress = false;
+                if (err2 || !results2 || !results2[0].success) {
+                  this.log.error('Errore durante l\'armamento dei settori:', err2 || (results2 && results2[0].message));
+                  this.targetState = this.currentState;
+                  this.updateAccessoryState();
+                  reject(new Error('Errore durante l\'armamento dei settori'));
+                  return;
+                }
+                this.log.info('Settori armati con successo:', toArm.join(','));
+                this.currentState = state;
+                this.updateAccessoryState();
+                setTimeout(() => this.pollElmoStatus(), 3000);
+                resolve();
+              });
+            } else {
+              // Solo disarmo, aggiorno stato
+              this.operationInProgress = false;
+              this.currentState = state;
+              this.updateAccessoryState();
+              setTimeout(() => this.pollElmoStatus(), 3000);
+              resolve();
+            }
+          });
+          return;
+        } else if (toArm.length > 0) {
+          // Solo armamento necessario
+          command = 'arm';
+          sectors = toArm;
+        } else {
+          // Tutto già a posto
+          this.log.info('Tutti i settori richiesti sono già nello stato corretto, nessun comando inviato.');
+          this.currentState = state;
+          this.updateAccessoryState();
+          this.operationInProgress = false;
+          resolve();
+          return;
+        }
+      }
+
+      // Esegue solo arm o disarm se necessario
+      const options = {
+        mode: 'json',
+        pythonPath: this.pythonPath,
+>>>>>>> 309ac3b (Aggiornamento alla versione 1.0.0)
         args: [
           command,
           this.username,
@@ -444,16 +604,23 @@ class ElmoPlatform {
           this.domain,
           this.code
         ],
+<<<<<<< HEAD
         timeout: 30000 // Timeout di 30 secondi
       };
       
       // Aggiungi i settori se specificati
+=======
+        timeout: 30000
+      };
+
+>>>>>>> 309ac3b (Aggiornamento alla versione 1.0.0)
       if (sectors && sectors.length > 0) {
         options.args.push(sectors.join(','));
         this.log.debug(`Comando ${command} con settori: ${sectors.join(',')}`);
       } else {
         this.log.debug(`Comando ${command} senza settori specifici`);
       }
+<<<<<<< HEAD
       
       if (this.debug) {
         options.args.push('--debug');
@@ -515,6 +682,28 @@ class ElmoPlatform {
           this.pollElmoStatus();
         }, 3000);
         
+=======
+
+      if (this.debug) {
+        options.args.push('--debug');
+      }
+
+      this.log.debug(`Esecuzione comando ${command} con timeout di 30 secondi`);
+
+      PythonShell.run(pythonScript, options, (err, results) => {
+        this.operationInProgress = false;
+        if (err || !results || !results[0].success) {
+          this.log.error(`Errore durante l'esecuzione del comando ${command}:`, err || (results && results[0].message));
+          this.targetState = this.currentState;
+          this.updateAccessoryState();
+          reject(new Error(`Errore del comando ${command}`));
+          return;
+        }
+        this.log.info(`Comando ${command} eseguito con successo:`, results[0].message);
+        this.currentState = state;
+        this.updateAccessoryState();
+        setTimeout(() => this.pollElmoStatus(), 3000);
+>>>>>>> 309ac3b (Aggiornamento alla versione 1.0.0)
         resolve();
       });
     });
@@ -569,3 +758,8 @@ module.exports = (homebridge) => {
   
   homebridge.registerPlatform('homebridge-elmo', 'ElmoSecuritySystem', ElmoPlatform);
 };
+<<<<<<< HEAD
+=======
+
+
+>>>>>>> 309ac3b (Aggiornamento alla versione 1.0.0)
